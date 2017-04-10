@@ -1,6 +1,7 @@
 """Hello Analytics Reporting API V4."""
 
 import argparse
+import csv
 
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
@@ -16,7 +17,7 @@ SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 DISCOVERY_URI = ('https://analyticsreporting.googleapis.com/$discovery/rest')
 KEY_FILE_LOCATION = creds.KEY_FILE_LOCATION
 SERVICE_ACCOUNT_EMAIL = creds.SERVICE_ACCOUNT_EMAIL
-VIEW_ID = creds.VIEW_ID
+VIEW_ID = str(creds.VIEW_ID)
 
 #date format should be 'YYYY-MM-DD' in str
 STARTDATE = '2017-04-08'
@@ -49,16 +50,18 @@ def get_report(analytics):
         {
           'viewId': VIEW_ID,
           'dateRanges': [{'startDate': STARTDATE, 'endDate': ENDDATE}],
-          'metrics': [{'expression': 'ga:sessions'}#,
-                      #{'expression': 'ga:pageviews'},
-                      #{'expression': 'ga:productDetailViews'},
-                      #{'expression': 'ga:productAddsToCart'},
-                      #{'expression': 'ga:productCheckouts'},
-                      #{'expression': 'ga:uniquePurchases'},
+          'metrics': [{'expression': 'ga:sessions'},
+                      {'expression': 'ga:pageviews'},
+                      {'expression': 'ga:productDetailViews'},
+                      {'expression': 'ga:productAddsToCart'},
+                      {'expression': 'ga:productCheckouts'},
+                      {'expression': 'ga:uniquePurchases'},
 
                      ],
           'dimensions': [{'name':'ga:date'},
-                         {'name':'ga:medium'}
+                         {'name':'ga:medium'},
+                         {'name':'ga:userType'},
+                         {'name':'ga:deviceCategory'}
                         ]
         }]
       }
@@ -90,31 +93,25 @@ def print_response(response):
   }                                             }
 
   """
+  #write in csv
+  with open('export.csv', 'wb') as csvfile:
+    writer = csv.writer(csvfile,
+                        delimiter=',',
+                        quoting=csv.QUOTE_MINIMAL
+                        )
+    writer.writerow(['date', 'medium'])
+    for line in response['reports'][0]['data']['rows']:
+      medium = str(line['dimensions'][1])
+      userType = str(line['dimensions'][2])
+      deviceCategory = str(line['dimensions'][3])
+      sessions = str(line['metrics'][0]['values'][0])
+      pageviews = str(line['metrics'][0]['values'][1])
+      productDetailViews = str(line['metrics'][0]['values'][2])
+      productAddsToCart = str(line['metrics'][0]['values'][3])
+      productCheckouts = str(line['metrics'][0]['values'][4])
+      uniquePurchases = str(line['metrics'][0]['values'][5])
 
-  """
-  #ORIGINAL CODE
-  for report in response.get('reports', []):
-    columnHeader = report.get('columnHeader', {})
-    dimensionHeaders = columnHeader.get('dimensions', [])
-    metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
-    rows = report.get('data', {}).get('rows', [])
-
-    for row in rows:
-      dimensions = row.get('dimensions', [])
-      dateRangeValues = row.get('metrics', [])
-
-      for header, dimension in zip(dimensionHeaders, dimensions):
-        print header + ': ' + dimension
-
-      for i, values in enumerate(dateRangeValues):
-        print 'Date range (' + str(i) + ')'
-        for metricHeader, value in zip(metricHeaders, values.get('values')):
-          print metricHeader.get('name') + ': ' + value
-  """
-  for line in response['reports'][0]['data']['rows']:
-      print 'date dimension', line['dimensions'][0]  #date dimension
-      print 'medium dimension', line['dimensions'][1]  #medium
-      print 'sessions metric', line['metrics'][0]['values'][0]  #sessions
+      writer.writerow([medium, userType, deviceCategory, sessions, pageviews, productDetailViews, productAddsToCart, productCheckouts, uniquePurchases])
 
 def main():
 

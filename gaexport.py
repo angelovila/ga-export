@@ -68,10 +68,12 @@ def get_report(analytics):
   ).execute()
 
 
-def print_response(response):
+def print_response(response, filename='export.csv'):
+  """
+  write to csv file
+  """
   """
   response['reports'][0]['data']['rows']   #returns a list of metrics and dimensions values
-    example below only has date as dimensions
   [
   {u'metrics': [{u'values': [u'1446', u'4592', u'891', u'249', u'195', u'61']}], u'dimensions': [u'20170408', u'(none)', u'New Visitor', u'desktop']},
   {u'metrics': [{u'values': [u'162', u'543', u'206', u'5', u'5', u'0']}], u'dimensions': [u'20170409', u'referral', u'New Visitor', u'desktop']},
@@ -97,7 +99,7 @@ def print_response(response):
 
   """
   #write in csv
-  with open('export.csv', 'wb') as csvfile:
+  with open(filename, 'wb') as csvfile:
     writer = csv.writer(csvfile,
                         delimiter=',',
                         quoting=csv.QUOTE_MINIMAL

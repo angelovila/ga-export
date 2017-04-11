@@ -69,28 +69,31 @@ def get_report(analytics):
 
 
 def print_response(response):
-  """Parses and prints the Analytics Reporting API V4 response"""
   """
-  a['data']['rows']   #returns a list of metrics and dimensions values
+  response['reports'][0]['data']['rows']   #returns a list of metrics and dimensions values
     example below only has date as dimensions
   [
-  {u'metrics': [{u'values': [u'20535']}], u'dimensions': [u'20170408']},
-  {u'metrics': [{u'values': [u'21403']}], u'dimensions': [u'20170409']},
-  {u'metrics': [{u'values': [u'1350']}], u'dimensions': [u'20170410']}
+  {u'metrics': [{u'values': [u'1446', u'4592', u'891', u'249', u'195', u'61']}], u'dimensions': [u'20170408', u'(none)', u'New Visitor', u'desktop']},
+  {u'metrics': [{u'values': [u'162', u'543', u'206', u'5', u'5', u'0']}], u'dimensions': [u'20170409', u'referral', u'New Visitor', u'desktop']},
+  {u'metrics': [{u'values': [u'1', u'1', u'1', u'0', u'0', u'0']}], u'dimensions': [u'20170408', u'display', u'Returning Visitor', u'desktop']}
+
   ]
 
-    example below only has date as dimensions
-    [
-    {u'metrics': [{u'values': [u'4279']}], u'dimensions': [u'20170408', u'(none)']},
-    {u'metrics': [{u'values': [u'140']}], u'dimensions': [u'20170408', u'(not set)']},
-    {u'metrics': [{u'values': [u'2473']}], u'dimensions': [u'20170408', u'affiliate']}
-    ]
 
   response['reports'][0]['columnHeader']  #returns the header
-  {u'dimensions': [u'ga:date'],u'metricHeader': {u'metricHeaderEntries': [
-      {u'type': u'INTEGER', u'name': u'ga:sessions'}
-                                                                          ]
-  }                                             }
+  {u'dimensions': [
+                   u'ga:date',
+                   u'ga:medium',
+                   u'ga:userType',
+                   u'ga:deviceCategory'
+                  ],
+   u'metricHeader': {u'metricHeaderEntries': [
+                                              {u'type': u'INTEGER', u'name': u'ga:sessions'},
+                                              {u'type': u'INTEGER', u'name': u'ga:pageviews'},
+                                              {u'type': u'INTEGER', u'name': u'ga:productDetailViews'},
+                                              {u'type': u'INTEGER', u'name': u'ga:productAddsToCart'},
+                                              {u'type': u'INTEGER', u'name': u'ga:productCheckouts'},
+                                              {u'type': u'INTEGER', u'name': u'ga:uniquePurchases'}]}}
 
   """
   #write in csv
@@ -99,8 +102,19 @@ def print_response(response):
                         delimiter=',',
                         quoting=csv.QUOTE_MINIMAL
                         )
-    writer.writerow(['date', 'medium'])
+    writer.writerow(['date',
+                     'medium',
+                     'userType',
+                     'deviceCategory',
+                     'sessions',
+                     'pageviews',
+                     'productDetailViews',
+                     'productAddToCart',
+                     'productCheckouts',
+                     'uniquePurchases'
+                   ])
     for line in response['reports'][0]['data']['rows']:
+      date = str(line['dimensions'][0])
       medium = str(line['dimensions'][1])
       userType = str(line['dimensions'][2])
       deviceCategory = str(line['dimensions'][3])
@@ -111,12 +125,22 @@ def print_response(response):
       productCheckouts = str(line['metrics'][0]['values'][4])
       uniquePurchases = str(line['metrics'][0]['values'][5])
 
-      writer.writerow([medium, userType, deviceCategory, sessions, pageviews, productDetailViews, productAddsToCart, productCheckouts, uniquePurchases])
+      writer.writerow([date,
+                       medium,
+                       userType,
+                       deviceCategory,
+                       sessions,
+                       pageviews,
+                       productDetailViews,
+                       productAddsToCart,
+                       productCheckouts,
+                       uniquePurchases
+                       ])
 
 def main():
 
-  analytics = G.initialize_analyticsreporting()
-  response = G.get_report(analytics)
+  analytics = initialize_analyticsreporting()
+  response = get_report(analytics)
   print_response(response)
 
 if __name__ == '__main__':

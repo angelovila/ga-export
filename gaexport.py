@@ -1,11 +1,7 @@
-"""Hello Analytics Reporting API V4."""
-
 import argparse
 import csv
-
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-
 import httplib2
 from oauth2client import client
 from oauth2client import file
@@ -19,10 +15,6 @@ KEY_FILE_LOCATION = creds.KEY_FILE_LOCATION
 SERVICE_ACCOUNT_EMAIL = creds.SERVICE_ACCOUNT_EMAIL
 VIEW_ID = str(creds.VIEW_ID)
 
-#date format should be 'YYYY-MM-DD' in str
-STARTDATE = '2017-04-08'
-ENDDATE = '2017-04-10'
-
 
 def initialize_analyticsreporting():
   """Initializes an analyticsreporting service object.
@@ -30,7 +22,7 @@ def initialize_analyticsreporting():
   Returns:
     analytics an authorized analyticsreporting service object.
   """
-
+  print "authenticating"
   credentials = ServiceAccountCredentials.from_p12_keyfile(
     SERVICE_ACCOUNT_EMAIL, KEY_FILE_LOCATION, scopes=SCOPES)
 
@@ -44,12 +36,13 @@ def initialize_analyticsreporting():
 
 def get_report(analytics):
   # Use the Analytics Service Object to query the Analytics Reporting API V4.
+  print "pulling report"
   return analytics.reports().batchGet(
       body={
         'reportRequests': [
         {
           'viewId': VIEW_ID,
-          'dateRanges': [{'startDate': STARTDATE, 'endDate': ENDDATE}],
+          'dateRanges': [{'startDate': creds.STARTDATE, 'endDate': creds.ENDDATE}],
           'metrics': [{'expression': 'ga:sessions'},
                       {'expression': 'ga:pageviews'},
                       {'expression': 'ga:productDetailViews'},
@@ -73,6 +66,8 @@ def print_response(response, filename='export.csv'):
   write to csv file
   """
   """
+  structure
+  
   response['reports'][0]['data']['rows']   #returns a list of metrics and dimensions values
   [
   {u'metrics': [{u'values': [u'1446', u'4592', u'891', u'249', u'195', u'61']}], u'dimensions': [u'20170408', u'(none)', u'New Visitor', u'desktop']},
@@ -98,7 +93,9 @@ def print_response(response, filename='export.csv'):
                                               {u'type': u'INTEGER', u'name': u'ga:uniquePurchases'}]}}
 
   """
+  print "writing", filename
   #write in csv
+  #write header
   with open(filename, 'wb') as csvfile:
     writer = csv.writer(csvfile,
                         delimiter=',',
@@ -115,6 +112,7 @@ def print_response(response, filename='export.csv'):
                      'productCheckouts',
                      'uniquePurchases'
                    ])
+    #get variables
     for line in response['reports'][0]['data']['rows']:
       date = str(line['dimensions'][0])
       medium = str(line['dimensions'][1])
@@ -126,7 +124,7 @@ def print_response(response, filename='export.csv'):
       productAddsToCart = str(line['metrics'][0]['values'][3])
       productCheckouts = str(line['metrics'][0]['values'][4])
       uniquePurchases = str(line['metrics'][0]['values'][5])
-
+      #write variables to csv per row
       writer.writerow([date,
                        medium,
                        userType,
@@ -138,6 +136,8 @@ def print_response(response, filename='export.csv'):
                        productCheckouts,
                        uniquePurchases
                        ])
+    print "complete"
+
 
 def main():
 

@@ -3,7 +3,7 @@ google analytics api data  to spreadsheet
 
 
 
-Running py file generate
+Running py file generate a spreadsheet containing Google Analytics site performance data one line per day
 
 
 
